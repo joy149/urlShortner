@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface UrlShortenerRepository extends MongoRepository<URLCollection, String> {
     Optional<URLCollection> findOneByHashValue(String hashValue);
+    Optional<URLCollection> findOneByResolvedUrl(String resolvedUrl);
 }
