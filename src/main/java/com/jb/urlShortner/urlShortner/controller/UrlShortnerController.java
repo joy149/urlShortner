@@ -20,14 +20,11 @@ public class UrlShortnerController {
 
     @GetMapping("/{hashId}")
     public ResponseEntity<?> getResolvedUrl(@PathVariable("hashId") String hashId) {
-        try {
-            String resolvedUrl = urlShortenerService.getResolvedUrlValue(hashId);
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", resolvedUrl)
-                    .build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        String resolvedUrl = urlShortenerService.getResolvedUrlValue(hashId);
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", resolvedUrl)
+                .build();
+
     }
 
     @PostMapping("/shorten")

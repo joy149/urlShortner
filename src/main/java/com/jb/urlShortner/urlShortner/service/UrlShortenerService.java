@@ -2,6 +2,8 @@ package com.jb.urlShortner.urlShortner.service;
 
 import com.jb.urlShortner.urlShortner.domain.URLCollection;
 import com.jb.urlShortner.urlShortner.domain.UrlShorteningRequest;
+import com.jb.urlShortner.urlShortner.exceptions.DuplicateAliasException;
+import com.jb.urlShortner.urlShortner.exceptions.UrlNotFoundException;
 import com.jb.urlShortner.urlShortner.repository.UrlShortenerRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +32,7 @@ public class UrlShortenerService {
         if (resolvedUrl.isPresent()) {
             return resolvedUrl.get().getResolvedUrl();
         }else {
-            throw new RuntimeException("Short URL not found");
+            throw new UrlNotFoundException(hashId);
         }
     }
 
@@ -49,7 +51,7 @@ public class UrlShortenerService {
         if (oneByHash.isEmpty()) {
             urlShortenerRepository.save(urlCollection);
         } else {
-            throw new RuntimeException("Hash collision found. Please retry.");
+            throw new DuplicateAliasException(hash);
         }
         return urlCollection.toBuilder()
                 .hashValue(String.format(appDns.concat("%s"), hash))
