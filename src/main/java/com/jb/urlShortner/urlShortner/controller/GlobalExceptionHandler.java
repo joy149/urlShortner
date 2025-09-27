@@ -2,6 +2,7 @@ package com.jb.urlShortner.urlShortner.controller;
 
 
 import com.jb.urlShortner.urlShortner.exceptions.DuplicateAliasException;
+import com.jb.urlShortner.urlShortner.exceptions.UrlExpirationException;
 import com.jb.urlShortner.urlShortner.exceptions.UrlNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateAliasException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicateAliasException(DuplicateAliasException ex) {
         return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(UrlExpirationException.class)
+    public ResponseEntity<Map<String, Object>> handleUrlExpirationException(UrlExpirationException ex) {
+        return buildErrorResponse(HttpStatus.GONE, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
