@@ -3,19 +3,20 @@ package com.jb.urlShortner.urlShortner.service;
 import com.jb.urlShortner.urlShortner.domain.URLCollection;
 import com.jb.urlShortner.urlShortner.domain.UrlShorteningRequest;
 import com.jb.urlShortner.urlShortner.exceptions.DuplicateAliasException;
+import com.jb.urlShortner.urlShortner.exceptions.UrlExpirationException;
 import com.jb.urlShortner.urlShortner.exceptions.UrlNotFoundException;
 import com.jb.urlShortner.urlShortner.repository.UrlShortenerRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
 public class UrlShortenerService {
 
     private final String appDns;
-
     private final TinyUrlGenerator tinyUrlGenerator;
     private final UrlShortenerRepository urlShortenerRepository;
 
@@ -30,6 +31,10 @@ public class UrlShortenerService {
     public String getResolvedUrlValue(final String hashId) {
         Optional<URLCollection> resolvedUrl = urlShortenerRepository.findOneByHashValue(hashId);
         if (resolvedUrl.isPresent()) {
+            URLCollection urlCollection = resolvedUrl.get();
+            if (urlCollection.getExpirationDate().isBefore(LocalDateTime.now())) {
+                throw new UrlExpirationException(urlCollection.getExpirationDate());
+            }
             return resolvedUrl.get().getResolvedUrl();
         }else {
             throw new UrlNotFoundException(hashId);
@@ -46,7 +51,14 @@ public class UrlShortenerService {
         final String longUrl = request.getLongUrl();
         final String hash = tinyUrlGenerator.generateRandomHash();
         Optional<URLCollection> oneByHash = urlShortenerRepository.findOneByHashValue(hash);
-        URLCollection urlCollection = new URLCollection(hash, longUrl);
+        LocalDateTime now = LocalDateTime.now();
+        URLCollection urlCollection = URLCollection.builder()
+                .hashValue(hash)
+                .resolvedUrl(longUrl)
+                .createdDate(now)
+                .expirationDate(now.plusDays(14))
+                .clickCount(0)
+                .build();
 
         if (oneByHash.isEmpty()) {
             urlShortenerRepository.save(urlCollection);
