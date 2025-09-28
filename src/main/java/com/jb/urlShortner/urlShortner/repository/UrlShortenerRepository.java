@@ -11,9 +11,12 @@ import java.util.Optional;
 @Repository
 public interface UrlShortenerRepository extends MongoRepository<URLCollection, String> {
     Optional<URLCollection> findOneByHashValue(String hashValue);
+
     Optional<URLCollection> findOneByResolvedUrl(String resolvedUrl);
+
     @Query("{ 'resolvedUrl': ?0, 'expirationDate': { $gt: ?1} }")
     Optional<URLCollection> findOneByActiveResolvedUrl(String resolvedUrl, LocalDateTime now);
+
     @Query("{ 'hashValue': ?0, 'expirationDate': { $gt: ?1} }")
     Optional<URLCollection> findOneByActiveHashValue(String hashId, LocalDateTime now);
 }

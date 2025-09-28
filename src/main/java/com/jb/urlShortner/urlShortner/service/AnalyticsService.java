@@ -7,9 +7,6 @@ import com.jb.urlShortner.urlShortner.repository.UrlShortenerRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-
 @Service
 public class AnalyticsService {
 

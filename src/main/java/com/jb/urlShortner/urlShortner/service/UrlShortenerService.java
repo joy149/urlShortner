@@ -7,7 +7,6 @@ import com.jb.urlShortner.urlShortner.exceptions.UrlExpirationException;
 import com.jb.urlShortner.urlShortner.exceptions.UrlNotFoundException;
 import com.jb.urlShortner.urlShortner.repository.UrlShortenerRepository;
 import jakarta.validation.Valid;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
