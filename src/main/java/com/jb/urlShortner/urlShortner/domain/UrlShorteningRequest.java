@@ -9,7 +9,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class UrlShorteningRequest {
-
     @NotEmpty
     private final String longUrl;
+    private final Integer expirationInDays;
 }

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -66,7 +67,9 @@ public class UrlShortenerService {
                 .hashValue(hash)
                 .resolvedUrl(longUrl)
                 .createdDate(now)
-                .expirationDate(now.plusDays(14))
+                .expirationDate(Objects.nonNull(request.getExpirationInDays())
+                        ? now.plusDays(request.getExpirationInDays())
+                        : now.plusDays(14))
                 .clickCount(0)
                 .build();
 
