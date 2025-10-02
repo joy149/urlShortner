@@ -1,5 +1,5 @@
 # Importing JDK and copying required files
-FROM openjdk:17-jdk AS build
+FROM openjdk:17-jdk-slim AS build
 WORKDIR /app
 COPY build.gradle settings.gradle ./
 COPY gradlew ./
@@ -13,7 +13,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew build
 
 # Stage 2: Create the final Docker image using OpenJDK 17
-FROM openjdk:17-jdk
+FROM openjdk:17-jdk-slim
 VOLUME /tmp
 
 # Copy the JAR from the build stage
