@@ -6,6 +6,8 @@ COPY gradlew ./
 COPY gradle gradle
 COPY src src
 
+RUN apt-get update && apt-get install -y bash curl unzip xz-utils git xargs
+
 # Set execution permission for the Gradle wrapper
 RUN chmod +x ./gradlew
 RUN ./gradlew build
