@@ -8,7 +8,7 @@ COPY src src
 
 # Set execution permission for the Gradle wrapper
 RUN chmod +x ./gradlew
-RUN ./gradlew build -x test
+RUN ./gradlew build
 
 # Stage 2: Create the final Docker image using OpenJDK 17
 FROM openjdk:17-jdk
