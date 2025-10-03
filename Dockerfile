@@ -6,12 +6,14 @@ COPY gradlew ./
 COPY gradle gradle
 COPY src src
 
-RUN apt-get update && apt-get install -y bash curl unzip xz-utils git xargs
-
 # Set execution permission for the Gradle wrapper
-RUN chmod +x ./gradlew
-RUN ./gradlew build
+# Copy gradle wrapper properties
+COPY gradle/wrapper/gradle-wrapper.properties gradle/wrapper/gradle-wrapper.properties
 
+# Build with no-daemon for Docker
+
+RUN chmod +x ./gradlew
+RUN ./gradlew --no-daemon build
 # Stage 2: Create the final Docker image using OpenJDK 17
 FROM openjdk:17-jdk-slim
 VOLUME /tmp
