@@ -25,7 +25,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:10000/?postLogin=1", true)
+                        .defaultSuccessUrl("/auth/success", true)
                         .failureHandler(new SimpleUrlAuthenticationFailureHandler("/auth/failure"))
                 )
                 .logout(logout -> logout
