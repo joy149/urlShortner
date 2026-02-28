@@ -1,5 +1,5 @@
 # Importing JDK and copying required files
-FROM openjdk:17-jdk-slim AS build
+FROM eclipse-temurin:17-jdk-jammy AS build
 WORKDIR /app
 COPY build.gradle settings.gradle ./
 COPY gradlew ./
@@ -14,8 +14,8 @@ COPY gradle/wrapper/gradle-wrapper.properties gradle/wrapper/gradle-wrapper.prop
 
 RUN chmod +x ./gradlew
 RUN ./gradlew --no-daemon build
-# Stage 2: Create the final Docker image using OpenJDK 17
-FROM openjdk:17-jdk-slim
+# Stage 2: Create the final Docker image using Java 17 runtime
+FROM eclipse-temurin:17-jre-jammy
 VOLUME /tmp
 
 # Copy the JAR from the build stage
