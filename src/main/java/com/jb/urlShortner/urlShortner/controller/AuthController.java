@@ -2,6 +2,7 @@ package com.jb.urlShortner.urlShortner.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,7 +18,21 @@ import java.util.Map;
 public class AuthController {
 
     private static final String REDIRECT_URI_SESSION_KEY = "oauth_redirect_uri";
-    private static final String DEFAULT_FRONTEND_URL = "http://localhost:10001/?postLogin=1";
+
+    // fallback kept for cases where property is missing
+    private static final String DEFAULT_FRONTEND_FALLBACK = "http://localhost:10001/?postLogin=1";
+
+    private final String defaultFrontendUrlFromConfig;
+
+    public AuthController(@Value("${frontend.default-url:}") String defaultFrontendUrlFromConfig) {
+        this.defaultFrontendUrlFromConfig = defaultFrontendUrlFromConfig;
+    }
+
+    private String getDefaultFrontendUrl() {
+        return (defaultFrontendUrlFromConfig == null || defaultFrontendUrlFromConfig.isBlank())
+                ? DEFAULT_FRONTEND_FALLBACK
+                : defaultFrontendUrlFromConfig;
+    }
 
     @GetMapping("/auth/me")
     public ResponseEntity<?> me(Authentication authentication) {
@@ -46,7 +61,7 @@ public class AuthController {
         HttpSession session = request.getSession(true);
         String resolvedRedirect = redirectUri != null && !redirectUri.isBlank()
                 ? redirectUri
-                : (redirectUriSnake != null && !redirectUriSnake.isBlank() ? redirectUriSnake : DEFAULT_FRONTEND_URL);
+                : (redirectUriSnake != null && !redirectUriSnake.isBlank() ? redirectUriSnake : getDefaultFrontendUrl());
         session.setAttribute(REDIRECT_URI_SESSION_KEY, resolvedRedirect);
 
         String registrationId = "google".equalsIgnoreCase(provider) ? "google" : "github";
@@ -59,7 +74,7 @@ public class AuthController {
     @GetMapping("/auth/success")
     public ResponseEntity<?> success(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        String redirect = DEFAULT_FRONTEND_URL;
+        String redirect = getDefaultFrontendUrl();
 
         if (session != null) {
             Object value = session.getAttribute(REDIRECT_URI_SESSION_KEY);
@@ -80,7 +95,7 @@ public class AuthController {
             HttpServletRequest request
     ) {
         HttpSession session = request.getSession(false);
-        String redirect = DEFAULT_FRONTEND_URL;
+        String redirect = getDefaultFrontendUrl();
 
         if (session != null) {
             Object value = session.getAttribute(REDIRECT_URI_SESSION_KEY);
