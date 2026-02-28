@@ -20,6 +20,8 @@ public class URLCollection {
     private final ObjectId id;
     private final String hashValue;
     private final String resolvedUrl;
+    private final String ownerLogin;
+    private final String ownerEmail;
     private final LocalDateTime createdDate;
     private final LocalDateTime expirationDate;
     private final Integer clickCount;
@@ -27,12 +29,16 @@ public class URLCollection {
     public URLCollection(ObjectId id,
                          String hashValue,
                          String resolvedUrl,
+                         String ownerLogin,
+                         String ownerEmail,
                          LocalDateTime createdDate,
                          LocalDateTime expirationDate,
                          Integer clickCount) {
         this.id = id;
         this.hashValue = hashValue;
         this.resolvedUrl = resolvedUrl;
+        this.ownerLogin = ownerLogin;
+        this.ownerEmail = ownerEmail;
         this.createdDate = createdDate;
         this.expirationDate = expirationDate;
         this.clickCount = clickCount;
@@ -43,6 +49,8 @@ public class URLCollection {
         return "URLCollection{" +
                 "hashValue='" + hashValue + '\'' +
                 ", resolvedUrl='" + resolvedUrl + '\'' +
+                ", ownerLogin='" + ownerLogin + '\'' +
+                ", ownerEmail='" + ownerEmail + '\'' +
                 ", createdDate=" + createdDate +
                 ", expirationDate=" + expirationDate +
                 ", clickCount=" + clickCount +

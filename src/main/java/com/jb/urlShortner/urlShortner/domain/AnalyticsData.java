@@ -1,8 +1,17 @@
 package com.jb.urlShortner.urlShortner.domain;
 
+import lombok.Builder;
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 
-
-public record AnalyticsData(String shortUrl, Long clickCount, LocalDateTime creationDate,
-                            LocalDateTime linkExpirationDate) {
+@Getter
+@Builder
+public class AnalyticsData {
+    private final String id;
+    private final String longUrl;
+    private final String shortUrl;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime expirationAt;
+    private final Integer clickCount;
 }

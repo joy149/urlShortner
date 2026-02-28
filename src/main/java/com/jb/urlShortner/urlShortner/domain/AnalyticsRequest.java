@@ -1,6 +1,13 @@
 package com.jb.urlShortner.urlShortner.domain;
 
-import jakarta.validation.constraints.NotEmpty;
+import lombok.Builder;
+import lombok.Getter;
 
-public record AnalyticsRequest(@NotEmpty String shortUrl) {
+@Getter
+@Builder
+public class AnalyticsRequest {
+    private final Integer totalUrls;
+    private final Integer totalClicks;
+    private final Integer activeUrls;
+    private final Integer expiredUrls;
 }

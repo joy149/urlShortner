@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -49,10 +50,13 @@ public class UrlShortenerService {
         }
     }
 
-    public URLCollection getShortenedUrl(@Valid final UrlShorteningRequest request) {
+    public URLCollection getShortenedUrl(@Valid final UrlShorteningRequest request,
+                                         final String ownerLogin,
+                                         final String ownerEmail) {
         final LocalDateTime now = LocalDateTime.now();
         // Check if we already have seen this url before and is not expired
-        final Optional<URLCollection> existing = urlShortenerRepository.findOneByActiveResolvedUrl(request.getLongUrl(), now);
+        final Optional<URLCollection> existing = urlShortenerRepository
+                .findOneByActiveResolvedUrlAndOwner(request.getLongUrl(), ownerLogin, now);
         if (existing.isPresent()) {
             return existing.get().toBuilder()
                     .hashValue(String.format(appDns.concat("%s"), existing.get().getHashValue()))
@@ -65,6 +69,8 @@ public class UrlShortenerService {
                 .id(idGenerator.getObjectId())
                 .hashValue(hash)
                 .resolvedUrl(longUrl)
+                .ownerLogin(ownerLogin)
+                .ownerEmail(ownerEmail)
                 .createdDate(now)
                 .expirationDate(Objects.nonNull(request.getExpirationInDays())
                         ? now.plusDays(request.getExpirationInDays())
@@ -80,6 +86,8 @@ public class UrlShortenerService {
                 //reuse the hash
                 final URLCollection reuseHash = existingHash.toBuilder()
                         .resolvedUrl(longUrl)
+                        .ownerLogin(ownerLogin)
+                        .ownerEmail(ownerEmail)
                         .createdDate(now)
                         .expirationDate(now.plusDays(14))
                         .clickCount(0)
@@ -92,5 +100,13 @@ public class UrlShortenerService {
         return urlCollection.toBuilder()
                 .hashValue(String.format(appDns.concat("%s"), hash))
                 .build();
+    }
+
+    public List<URLCollection> getMyUrls(final String ownerLogin) {
+        return urlShortenerRepository.findAllByOwnerLoginOrderByCreatedDateDesc(ownerLogin).stream()
+                .map(url -> url.toBuilder()
+                        .hashValue(String.format(appDns.concat("%s"), url.getHashValue()))
+                        .build())
+                .toList();
     }
 }
