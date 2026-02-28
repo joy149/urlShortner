@@ -24,7 +24,7 @@ public class AuthController {
 
     private final String defaultFrontendUrlFromConfig;
 
-    public AuthController(@Value("${frontend.default-url:}") String defaultFrontendUrlFromConfig) {
+    public AuthController(@Value("${frontend.default-url}") String defaultFrontendUrlFromConfig) {
         this.defaultFrontendUrlFromConfig = defaultFrontendUrlFromConfig;
     }
 
