@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'com.jb.urlShortner'
@@ -34,4 +35,48 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy tasks.named('jacocoTestReport')
+}
+
+jacoco {
+	toolVersion = '0.8.12'
+}
+
+def coverageExclusions = [
+		'com/jb/urlShortner/urlShortner/domain/**',
+		'com/jb/urlShortner/urlShortner/config/**',
+		'com/jb/urlShortner/urlShortner/repository/**',
+		'com/jb/urlShortner/urlShortner/exceptions/**',
+		'com/jb/urlShortner/urlShortner/UrlShortnerApplication*'
+]
+
+tasks.named('jacocoTestReport') {
+	dependsOn tasks.named('test')
+	reports {
+		xml.required = true
+		html.required = true
+	}
+	classDirectories.setFrom(sourceSets.main.output.asFileTree.matching {
+		exclude coverageExclusions
+	})
+}
+
+tasks.named('jacocoTestCoverageVerification', JacocoCoverageVerification) {
+	dependsOn tasks.named('test')
+	violationRules {
+		rule {
+			limit {
+				counter = 'LINE'
+				value = 'COVEREDRATIO'
+				minimum = 0.80
+			}
+		}
+	}
+	classDirectories.setFrom(sourceSets.main.output.asFileTree.matching {
+		exclude coverageExclusions
+	})
+}
+
+tasks.named('check') {
+	dependsOn tasks.named('jacocoTestCoverageVerification')
 }
