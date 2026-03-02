@@ -1,5 +1,8 @@
 package com.jb.urlShortner.urlShortner.controller;
 
+import com.jb.urlShortner.urlShortner.domain.AuthenticatedUser;
+import com.jb.urlShortner.urlShortner.service.AuthIdentityResolver;
+import com.jb.urlShortner.urlShortner.service.AuthTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,8 +14,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 public class AuthController {
@@ -23,9 +30,15 @@ public class AuthController {
     private static final String DEFAULT_FRONTEND_FALLBACK = "http://localhost:10001/?postLogin=1";
 
     private final String defaultFrontendUrlFromConfig;
+    private final AuthTokenService authTokenService;
+    private final AuthIdentityResolver authIdentityResolver;
 
-    public AuthController(@Value("${frontend.default-url}") String defaultFrontendUrlFromConfig) {
+    public AuthController(@Value("${frontend.default-url}") String defaultFrontendUrlFromConfig,
+                          AuthTokenService authTokenService,
+                          AuthIdentityResolver authIdentityResolver) {
         this.defaultFrontendUrlFromConfig = defaultFrontendUrlFromConfig;
+        this.authTokenService = authTokenService;
+        this.authIdentityResolver = authIdentityResolver;
     }
 
     private String getDefaultFrontendUrl() {
@@ -35,19 +48,27 @@ public class AuthController {
     }
 
     @GetMapping("/auth/me")
-    public ResponseEntity<?> me(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof OAuth2User oauth2User)) {
+    public ResponseEntity<?> me(Authentication authentication, HttpServletRequest request) {
+        Optional<AuthenticatedUser> resolvedUser = authIdentityResolver.resolve(authentication, request);
+        if (resolvedUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("authenticated", false));
         }
 
+        AuthenticatedUser user = resolvedUser.get();
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("authenticated", true);
-        response.put("name", oauth2User.getAttribute("name"));
-        response.put("login", oauth2User.getAttribute("login"));
-        response.put("email", oauth2User.getAttribute("email"));
-        response.put("avatarUrl", oauth2User.getAttribute("avatar_url"));
-        response.put("attributes", oauth2User.getAttributes());
+        response.put("name", user.name());
+        response.put("login", user.login());
+        response.put("email", user.email());
+
+        if (authentication != null && authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+            response.put("avatarUrl", oauth2User.getAttribute("avatar_url"));
+            response.put("attributes", oauth2User.getAttributes());
+        } else {
+            response.put("avatarUrl", null);
+            response.put("attributes", Map.of());
+        }
         return ResponseEntity.ok(response);
     }
 
@@ -72,7 +93,7 @@ public class AuthController {
     }
 
     @GetMapping("/auth/success")
-    public ResponseEntity<?> success(HttpServletRequest request) {
+    public ResponseEntity<?> success(HttpServletRequest request, Authentication authentication) {
         HttpSession session = request.getSession(false);
         String redirect = getDefaultFrontendUrl();
 
@@ -82,6 +103,17 @@ public class AuthController {
                 redirect = redirectFromSession;
             }
             session.removeAttribute(REDIRECT_URI_SESSION_KEY);
+        }
+
+        if (authentication != null && authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+            String ownerLogin = oauth2User.getAttribute("login");
+            String login = Objects.nonNull(ownerLogin) && !ownerLogin.isBlank() ? ownerLogin : authentication.getName();
+            String token = authTokenService.issueToken(new AuthenticatedUser(
+                    login,
+                    oauth2User.getAttribute("email"),
+                    oauth2User.getAttribute("name")
+            ));
+            redirect = appendQueryParam(redirect, "token", token);
         }
 
         return ResponseEntity.status(HttpStatus.FOUND)
@@ -111,5 +143,10 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", target)
                 .build();
+    }
+
+    private String appendQueryParam(String baseUrl, String key, String value) {
+        String separator = baseUrl.contains("?") ? "&" : "?";
+        return baseUrl + separator + key + "=" + URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

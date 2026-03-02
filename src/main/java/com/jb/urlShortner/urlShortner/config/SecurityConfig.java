@@ -18,8 +18,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/ping", "/error", "/oauth2/**", "/login/**", "/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/urls/my", "/metrics/summary").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/myUrls", "/my-urls").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/urls/my", "/metrics/summary").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/myUrls", "/my-urls").permitAll()
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/shorten").permitAll()
                         .anyRequest().authenticated()

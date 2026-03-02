@@ -2,23 +2,25 @@ package com.jb.urlShortner.urlShortner.controller;
 
 
 import com.jb.urlShortner.urlShortner.domain.UrlShorteningRequest;
+import com.jb.urlShortner.urlShortner.service.AuthIdentityResolver;
 import com.jb.urlShortner.urlShortner.service.UrlShortenerService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Objects;
 
 @RestController
 public class UrlShortnerController {
 
     private final UrlShortenerService urlShortenerService;
+    private final AuthIdentityResolver authIdentityResolver;
 
-    public UrlShortnerController(UrlShortenerService urlShortenerService) {
+    public UrlShortnerController(UrlShortenerService urlShortenerService,
+                                 AuthIdentityResolver authIdentityResolver) {
         this.urlShortenerService = urlShortenerService;
+        this.authIdentityResolver = authIdentityResolver;
     }
 
     @GetMapping("/ping")
@@ -37,18 +39,10 @@ public class UrlShortnerController {
 
     @PostMapping("/shorten")
     public ResponseEntity<?> getShortenedUrl(@RequestBody @Valid UrlShorteningRequest request,
-                                             Authentication authentication) {
-        if (authentication != null && authentication.getPrincipal() instanceof OAuth2User oauth2User) {
-            String ownerLogin = resolveOwnerLogin(authentication, oauth2User);
-            String ownerEmail = oauth2User.getAttribute("email");
-            return ResponseEntity.ok(urlShortenerService.getShortenedUrl(request, ownerLogin, ownerEmail));
-        }
-
-        return ResponseEntity.ok(urlShortenerService.getShortenedUrl(request, null, null));
-    }
-
-    private String resolveOwnerLogin(Authentication authentication, OAuth2User oauth2User) {
-        String ownerLogin = oauth2User.getAttribute("login");
-        return Objects.nonNull(ownerLogin) && !ownerLogin.isBlank() ? ownerLogin : authentication.getName();
+                                             Authentication authentication,
+                                             HttpServletRequest httpServletRequest) {
+        return authIdentityResolver.resolve(authentication, httpServletRequest)
+                .map(user -> ResponseEntity.ok(urlShortenerService.getShortenedUrl(request, user.login(), user.email())))
+                .orElseGet(() -> ResponseEntity.ok(urlShortenerService.getShortenedUrl(request, null, null)));
     }
 }
