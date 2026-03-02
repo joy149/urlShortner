@@ -10,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -39,14 +38,13 @@ public class UrlShortnerController {
     @PostMapping("/shorten")
     public ResponseEntity<?> getShortenedUrl(@RequestBody @Valid UrlShorteningRequest request,
                                              Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof OAuth2User oauth2User)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Authentication required"));
+        if (authentication != null && authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+            String ownerLogin = resolveOwnerLogin(authentication, oauth2User);
+            String ownerEmail = oauth2User.getAttribute("email");
+            return ResponseEntity.ok(urlShortenerService.getShortenedUrl(request, ownerLogin, ownerEmail));
         }
 
-        String ownerLogin = resolveOwnerLogin(authentication, oauth2User);
-        String ownerEmail = oauth2User.getAttribute("email");
-        return ResponseEntity.ok(urlShortenerService.getShortenedUrl(request, ownerLogin, ownerEmail));
+        return ResponseEntity.ok(urlShortenerService.getShortenedUrl(request, null, null));
     }
 
     private String resolveOwnerLogin(Authentication authentication, OAuth2User oauth2User) {

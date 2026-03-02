@@ -18,6 +18,9 @@ public interface UrlShortenerRepository extends MongoRepository<URLCollection, S
     @Query("{ 'resolvedUrl': ?0, 'ownerLogin': ?1, 'expirationDate': { $gt: ?2} }")
     Optional<URLCollection> findOneByActiveResolvedUrlAndOwner(String resolvedUrl, String ownerLogin, LocalDateTime now);
 
+    @Query("{ 'resolvedUrl': ?0, '$or': [ { 'ownerLogin': null }, { 'ownerLogin': { $exists: false } } ], 'expirationDate': { $gt: ?1} }")
+    Optional<URLCollection> findOneByActiveResolvedUrlForAnonymous(String resolvedUrl, LocalDateTime now);
+
     @Query("{ 'hashValue': ?0, 'expirationDate': { $gt: ?1} }")
     Optional<URLCollection> findOneByActiveHashValue(String hashId, LocalDateTime now);
 

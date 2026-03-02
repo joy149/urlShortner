@@ -54,9 +54,13 @@ public class UrlShortenerService {
                                          final String ownerLogin,
                                          final String ownerEmail) {
         final LocalDateTime now = LocalDateTime.now();
-        // Check if we already have seen this url before and is not expired
-        final Optional<URLCollection> existing = urlShortenerRepository
-                .findOneByActiveResolvedUrlAndOwner(request.getLongUrl(), ownerLogin, now);
+        final Optional<URLCollection> existing;
+        // Authenticated users dedupe per owner, anonymous users dedupe against anonymous pool.
+        if (Objects.nonNull(ownerLogin) && !ownerLogin.isBlank()) {
+            existing = urlShortenerRepository.findOneByActiveResolvedUrlAndOwner(request.getLongUrl(), ownerLogin, now);
+        } else {
+            existing = urlShortenerRepository.findOneByActiveResolvedUrlForAnonymous(request.getLongUrl(), now);
+        }
         if (existing.isPresent()) {
             return existing.get().toBuilder()
                     .hashValue(String.format(appDns.concat("%s"), existing.get().getHashValue()))

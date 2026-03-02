@@ -21,7 +21,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/urls/my", "/metrics/summary").authenticated()
                         .requestMatchers(HttpMethod.GET, "/myUrls", "/my-urls").authenticated()
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/shorten").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/shorten").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
